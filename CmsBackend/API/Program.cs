@@ -12,18 +12,28 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// DB
-builder.Services.AddDbContext<AppDbContext>(opt =>
-    opt.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+// ==========================
+// DB CONFIG (PostgreSQL)
+// ==========================
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Services
+// ==========================
+// SERVICES
+// ==========================
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IBlogVersioningService, BlogVersioningService>();
+
+// ==========================
+// OPEN API + SCALAR
+// ==========================
 builder.Services.AddOpenApi();
 
-// Auth
+// ==========================
+// AUTH (JWT)
+// ==========================
 builder.Services.AddAuthentication("Bearer")
     .AddJwtBearer("Bearer", options =>
     {
@@ -34,25 +44,35 @@ builder.Services.AddAuthentication("Bearer")
             ValidateIssuerSigningKey = true,
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
         };
     });
 
 builder.Services.AddAuthorization();
 
+// ==========================
+// CONTROLLERS
+// ==========================
 builder.Services.AddControllers();
 
 var app = builder.Build();
 
+// ==========================
+// OPEN API ENDPOINT
+// ==========================
 app.MapOpenApi();
-// Middleware
-if (app.Environment.IsDevelopment())
-{
-    app.MapScalarApiReference(options => {
-        options.WithTitle("CMS Blog");
-    });
-};
 
+// ==========================
+// SCALAR UI (ENABLE IN PROD)
+// ==========================
+app.MapScalarApiReference(options =>
+{
+    options.WithTitle("CMS Blog API");
+});
+
+// ==========================
+// MIDDLEWARE
+// ==========================
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
@@ -60,4 +80,11 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+// ==========================
+// RAILWAY PORT FIX (IMPORTANT)
+// ==========================
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+app.Urls.Add($"http://0.0.0.0:{port}");
+
+// ==========================
 app.Run();
