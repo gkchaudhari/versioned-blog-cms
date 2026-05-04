@@ -8,7 +8,7 @@ using System.Text;
 
 namespace CmsBackend.Application.Auth.Services
 {
-    public class AuthService: IAuthService
+    public class AuthService : IAuthService
     {
         private readonly AppDbContext _context;
         private readonly IJwtService _jwt;
@@ -41,10 +41,20 @@ namespace CmsBackend.Application.Auth.Services
 
         public string Login(Login dto)
         {
-                var user = _context.Users.FirstOrDefault(x => x.Email == dto.Email);
+            if (dto.Email == null || dto.Password == null)
+            {
+                throw new Exception("Invalid Credential");
+            }
 
-                if (user == null || user.PasswordHash != HashPassword(dto.Password))
-                    throw new Exception("Invalid credentials");
+            var user = _context.Users.FirstOrDefault(x => x.Email == dto.Email);
+
+            if (user == null)
+            {
+                throw new Exception("User doest not exists");
+            }
+
+            if (user == null || user.PasswordHash != HashPassword(dto.Password))
+                throw new Exception("Invalid credentials");
 
             return _jwt.GenerateToken(user);
         }

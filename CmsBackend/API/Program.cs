@@ -31,6 +31,39 @@ builder.Services.AddScoped<IBlogVersioningService, BlogVersioningService>();
 // ==========================
 builder.Services.AddOpenApi();
 
+
+
+
+//============================
+//Setup Env
+//============================
+
+bool isDev = builder.Environment.IsDevelopment();
+
+//=============================
+// Add CORS
+//=============================
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("CorsPolicy", policy =>
+    {
+        if (isDev)
+        {
+            policy.WithOrigins("http://localhost:4200")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        }
+        else
+        {
+            policy.WithOrigins("https://your-frontend.vercel.app")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        }
+    });
+});
+
+
 // ==========================
 // AUTH (JWT)
 // ==========================
@@ -74,7 +107,7 @@ app.MapScalarApiReference(options =>
 // MIDDLEWARE
 // ==========================
 app.UseHttpsRedirection();
-
+app.UseCors("CorsPolicy");
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -83,8 +116,14 @@ app.MapControllers();
 // ==========================
 // RAILWAY PORT FIX (IMPORTANT)
 // ==========================
-var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-app.Urls.Add($"http://0.0.0.0:{port}");
+app.UseRouting();
+
+if (!isDev)
+{
+    var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+    app.Urls.Add($"http://0.0.0.0:{port}");
+}
+
 
 // ==========================
 app.Run();

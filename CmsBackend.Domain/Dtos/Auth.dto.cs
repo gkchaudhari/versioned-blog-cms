@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace CmsBackend.Domain.Dtos
+﻿namespace CmsBackend.Domain.Dtos
 {
     public class RegisterUser
     {
