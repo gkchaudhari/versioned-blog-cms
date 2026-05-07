@@ -1,21 +1,30 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using CmsBackend.Domain.Enums;
+using System.ComponentModel.DataAnnotations;
 
 namespace CmsBackend.Domain.Dtos
 {
     public record BlogCreateDto
     {
         [Required]
-        public string Title { get; init; }
-        public string Content { get; init; }
+        public required string Title { get; init; }
+        public required string Content { get; init; }
+    }
+
+    public record BlogUpdateDto
+    {
+        public string? Title { get; init; }
+        public string? Content { get; init; }
+
+        public BlogStatus Status { get; init; }
     }
 
     public record BlogResponseDto
     {
-        public int Id { get; init; }
-        public string Title { get; init; }
-        public string Content { get; init; }
-        public string AuthorName { get; init; }
-        public string Status { get; init; }
+        public Guid Id { get; init; }
+        public string? Title { get; set; }
+        public string? Content { get; set; }
+        public string? AuthorName { get; set; }
+        public string? Status { get; set; }
 
     }
 }

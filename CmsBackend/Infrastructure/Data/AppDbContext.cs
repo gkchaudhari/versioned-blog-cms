@@ -10,6 +10,5 @@ namespace CmsBackend.Infrastructure.Data
         public DbSet<User> Users { get; set; }
 
         public DbSet<Blog> Blogs { get; set; }
-        public DbSet<BlogVersion> BlogVersions { get; set; }
     }
 }

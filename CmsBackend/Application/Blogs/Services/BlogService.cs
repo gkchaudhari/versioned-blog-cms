@@ -15,22 +15,65 @@ namespace CmsBackend.Application.Blogs.Services
         {
             _context = context;
         }
-        public async Task<Blog> CreateBlogAsync(BlogCreateDto dto, Guid userId)
+        public async Task<BlogResponseDto> CreateBlogAsync(BlogCreateDto dto, Guid userId)
         {
+            var userExists = await _context.Users
+                .AnyAsync(u => u.Id == userId);
+
+            if (!userExists)
+            {
+                throw new Exception("User not found");
+            }
+
             Blog blog = new Blog
             {
+                Id = new Guid(),
                 Title = dto.Title,
                 Content = dto.Content,
-                AuthorId = userId,
-                CreatedAt = DateTime.UtcNow
+                AuthorId = userId
             };
 
             _context.Blogs.Add(blog);
+
             await _context.SaveChangesAsync();
-            return blog;
+
+            return blog.Adapt<BlogResponseDto>();
         }
 
-        public async Task<BlogResponseDto> GetBlogAsync(int blogId)
+        public async Task<BlogResponseDto> DeleteBlogAsync(Guid blogId)
+        {
+            var blog = _context.Blogs.FirstOrDefault(b => b.Id == blogId);
+            if (blog == null)
+            {
+                throw new Exception("Invlaid Blog Id");
+            }
+            _context.Blogs.Remove(blog);
+            await _context.SaveChangesAsync();
+            var blogRes = blog.Adapt<BlogResponseDto>();
+            return blogRes;
+        }
+
+        public async Task<List<Blog>> GetAllBlogAsync()
+        {
+            var blogs = await _context.Blogs.ToListAsync();
+            if (blogs == null || blogs.Count == 0)
+            {
+                throw new Exception("No Blogs Found");
+            }
+            return blogs;
+        }
+
+        public async Task<List<Blog>> GetAllBlogByAuthor(Guid AuthorId)
+        {
+            var blogs = await _context.Blogs.Where(b => b.AuthorId == AuthorId).ToListAsync();
+            if (blogs == null || blogs.Count == 0)
+            {
+                throw new Exception("No Blogs Found");
+            }
+            return blogs;
+        }
+
+        public async Task<BlogResponseDto> GetBlogAsync(Guid blogId)
         {
             var blog = await _context.Blogs
                 .Include(b => b.Author)
@@ -38,7 +81,7 @@ namespace CmsBackend.Application.Blogs.Services
 
             if (blog == null)
             {
-                return null;
+                throw new Exception("Invalid Blog Id");
             }
 
             //Mapster make it simple easy.
@@ -53,6 +96,26 @@ namespace CmsBackend.Application.Blogs.Services
 
             var blogRes = blog.Adapt<BlogResponseDto>();
 
+            return blogRes;
+        }
+
+        public async Task<BlogResponseDto> UpdateBlogAsync(Guid blogId, BlogUpdateDto dto)
+        {
+            var blog = _context.Blogs.FirstOrDefault(b => b.Id == blogId);
+
+            if (blog == null)
+            {
+                throw new Exception("Blog not found");
+            }
+
+            blog.Title = dto.Title;
+            blog.Status = dto.Status;
+            blog.Content = dto.Content;
+
+            _context.Blogs.Update(blog);
+            await _context.SaveChangesAsync();
+
+            var blogRes = blog.Adapt<BlogResponseDto>();
             return blogRes;
         }
     }
