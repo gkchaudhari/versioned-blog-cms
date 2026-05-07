@@ -9,6 +9,7 @@ namespace CmsBackend.Domain.Entiites
         public string Name { get; set; }
         public string Email { get; set; }
         public string PasswordHash { get; set; }
-        public Roles Role { get; set; } // Admin / User
+        public List<Blog> Blogs { get; set; } = new List<Blog>();
+        public Roles Role { get; set; }
     }
 }

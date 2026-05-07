@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CmsBackend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260504015415_init")]
-    partial class init
+    [Migration("20260506155402_fixedAuthorId")]
+    partial class fixedAuthorId
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,92 +25,63 @@ namespace CmsBackend.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("CmsBackend.Domain.Entiites.BlogEntity", b =>
+            modelBuilder.Entity("CmsBackend.Domain.Entiites.Blog", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<Guid>("AuthorId")
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("CurrentVersionId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("ScheduledPublishAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Slug")
+                    b.Property<string>("Content")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CurrentVersionId");
-
-                    b.HasIndex("Slug")
-                        .IsUnique();
+                    b.HasIndex("AuthorId");
 
                     b.ToTable("Blogs");
                 });
 
             modelBuilder.Entity("CmsBackend.Domain.Entiites.BlogVersion", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
 
-                    b.Property<Guid>("BlogId")
-                        .HasColumnType("uuid");
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("ChangeNote")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                    b.Property<int>("BlogId")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("CoverImageUrl")
-                        .HasColumnType("text");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("CreatedByUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Excerpt")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<string>("Tags")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
-
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<int>("VersionNumber")
-                        .HasColumnType("integer");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BlogId", "VersionNumber")
-                        .IsUnique();
+                    b.HasIndex("BlogId");
 
                     b.ToTable("BlogVersions");
                 });
@@ -147,19 +118,20 @@ namespace CmsBackend.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("CmsBackend.Domain.Entiites.BlogEntity", b =>
+            modelBuilder.Entity("CmsBackend.Domain.Entiites.Blog", b =>
                 {
-                    b.HasOne("CmsBackend.Domain.Entiites.BlogVersion", "CurrentVersion")
-                        .WithMany()
-                        .HasForeignKey("CurrentVersionId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                    b.HasOne("CmsBackend.Domain.Entiites.User", "Author")
+                        .WithMany("Blogs")
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Navigation("CurrentVersion");
+                    b.Navigation("Author");
                 });
 
             modelBuilder.Entity("CmsBackend.Domain.Entiites.BlogVersion", b =>
                 {
-                    b.HasOne("CmsBackend.Domain.Entiites.BlogEntity", "Blog")
+                    b.HasOne("CmsBackend.Domain.Entiites.Blog", "Blog")
                         .WithMany("Versions")
                         .HasForeignKey("BlogId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -168,9 +140,14 @@ namespace CmsBackend.Migrations
                     b.Navigation("Blog");
                 });
 
-            modelBuilder.Entity("CmsBackend.Domain.Entiites.BlogEntity", b =>
+            modelBuilder.Entity("CmsBackend.Domain.Entiites.Blog", b =>
                 {
                     b.Navigation("Versions");
+                });
+
+            modelBuilder.Entity("CmsBackend.Domain.Entiites.User", b =>
+                {
+                    b.Navigation("Blogs");
                 });
 #pragma warning restore 612, 618
         }

@@ -1,7 +1,7 @@
 using CmsBackend.Application.Auth.Interfaces;
 using CmsBackend.Application.Auth.Services;
-using CmsBackend.Application.Blog.interfaces;
-using CmsBackend.Application.Blog.Services;
+using CmsBackend.Application.Blogs.Interfaces;
+using CmsBackend.Application.Blogs.Services;
 using CmsBackend.Application.Users.Interfaces;
 using CmsBackend.Application.Users.Services;
 using CmsBackend.Infrastructure.Data;
@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using System.Text;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,11 +21,11 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // ==========================
 // SERVICES
-// ==========================
+// ========================== 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IBlogVersioningService, BlogVersioningService>();
+builder.Services.AddScoped<IBlogService, BlogService>();
 
 // ==========================
 // OPEN API + SCALAR
@@ -86,7 +87,12 @@ builder.Services.AddAuthorization();
 // ==========================
 // CONTROLLERS
 // ==========================
-builder.Services.AddControllers();
+//This will convert enum numbers 1, 2, 3 into "Publish", "Draft"
+builder.Services.AddControllers().AddJsonOptions(options =>
+     {
+         options.JsonSerializerOptions.Converters
+             .Add(new JsonStringEnumConverter());
+     });
 
 var app = builder.Build();
 
@@ -116,7 +122,6 @@ app.MapControllers();
 // ==========================
 // RAILWAY PORT FIX (IMPORTANT)
 // ==========================
-app.UseRouting();
 
 if (!isDev)
 {

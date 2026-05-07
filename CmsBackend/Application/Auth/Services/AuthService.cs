@@ -24,6 +24,10 @@ namespace CmsBackend.Application.Auth.Services
             if (_context.Users.Any(x => x.Email == dto.Email))
                 throw new UnauthorizedAccessException("User already exists");
 
+            if (string.IsNullOrEmpty(dto.Email) || string.IsNullOrEmpty(dto.Name) || string.IsNullOrEmpty(dto.Password))
+            {
+                throw new Exception("All fields are required.");
+            }
             var user = new User
             {
                 Name = dto.Name,
