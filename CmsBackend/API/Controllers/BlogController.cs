@@ -87,11 +87,11 @@ namespace CmsBackend.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllBlogs()
+        public async Task<IActionResult> GetAllBlogs([FromQuery] int page, [FromQuery] int pageSize)
         {
             try
             {
-                var res = await _service.GetAllBlogAsync();
+                var res = await _service.GetAllBlogAsync(page, pageSize);
                 return Ok(res);
             }
             catch (Exception ex)

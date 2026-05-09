@@ -1,4 +1,5 @@
 ﻿using CmsBackend.Application.Blogs.Interfaces;
+using CmsBackend.Domain.common;
 using CmsBackend.Domain.Dtos;
 using CmsBackend.Domain.Entiites;
 using CmsBackend.Infrastructure.Data;
@@ -17,19 +18,24 @@ namespace CmsBackend.Application.Blogs.Services
         }
         public async Task<BlogResponseDto> CreateBlogAsync(BlogCreateDto dto, Guid userId)
         {
-            var userExists = await _context.Users
-                .AnyAsync(u => u.Id == userId);
+            var user = await _context.Users
+                .FindAsync(userId);
 
-            if (!userExists)
+            if (user == null)
             {
                 throw new Exception("User not found");
             }
+
+            string slug = string.Join("-", dto.Title.ToLowerInvariant().Split(' '));
 
             Blog blog = new Blog
             {
                 Id = new Guid(),
                 Title = dto.Title,
                 Content = dto.Content,
+                CreatedBy = user.Email,
+                UpdatedBy = user.Email,
+                Slug = slug,
                 AuthorId = userId
             };
 
@@ -53,14 +59,26 @@ namespace CmsBackend.Application.Blogs.Services
             return blogRes;
         }
 
-        public async Task<List<Blog>> GetAllBlogAsync()
+        public async Task<PagedResult<Blog>> GetAllBlogAsync(int page, int pageSize)
         {
-            var blogs = await _context.Blogs.ToListAsync();
+            var totalCount = await _context.Blogs.CountAsync();
+
+            var blogs = await _context.Blogs.OrderByDescending(b => b.CreatedAt).
+                Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+
             if (blogs == null || blogs.Count == 0)
             {
                 throw new Exception("No Blogs Found");
             }
-            return blogs;
+
+            var pageResult = new PagedResult<Blog>
+            {
+                Data = blogs,
+                TotalCount = totalCount,
+                page = page,
+                PageSize = pageSize
+            };
+            return pageResult;
         }
 
         public async Task<List<Blog>> GetAllBlogByAuthor(Guid AuthorId)

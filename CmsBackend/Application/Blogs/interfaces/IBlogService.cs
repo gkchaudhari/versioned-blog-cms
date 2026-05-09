@@ -1,11 +1,12 @@
-﻿using CmsBackend.Domain.Dtos;
+﻿using CmsBackend.Domain.common;
+using CmsBackend.Domain.Dtos;
 using CmsBackend.Domain.Entiites;
 
 namespace CmsBackend.Application.Blogs.Interfaces
 {
     public interface IBlogService
     {
-        public Task<List<Blog>> GetAllBlogAsync();
+        public Task<PagedResult<Blog>> GetAllBlogAsync(int page, int pageSize);
         public Task<BlogResponseDto> CreateBlogAsync(BlogCreateDto dto, Guid userId);
         public Task<BlogResponseDto> GetBlogAsync(Guid blogId);
         public Task<BlogResponseDto> UpdateBlogAsync(Guid blogId, BlogUpdateDto dto);
